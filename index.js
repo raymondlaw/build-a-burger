@@ -59,29 +59,27 @@ const create_server = function (assets) {
 const parse_order = function (order, assets, res) {
     let burger = [];
     let ids = assets.map((x) => x.id);
-    let validated_order = "";
+    let filename = "burger-";
     [...order].forEach(function (letter) {
         let i = ids.indexOf(letter);
         if (i !== -1) {
             burger.push(assets[i]);
-            validated_order += letter;
+            filename += letter;
         }
     });
-    let filename = `tmp/${validated_order}.png`;
-    fs.access(filename, function (does_not_exist) {
+    let path = `tmp/${filename}.png`;
+    fs.access(path, function (does_not_exist) {
         if (does_not_exist  || !cache_enabled) {
-            create_burger(burger, filename, res);
+            create_burger(burger, path, res);
         }
         else {
             console.log("Cache Hit");
-            let image_stream = fs.createReadStream(filename);
-            res.writeHead(200, {"Content-Type": "image/jpeg"});
-            image_stream.pipe(res);
+            deliver_burger(path, res);
         }
     });
 };
 
-const create_burger = function (burger, filename, res) {
+const create_burger = function (burger, path, res) {
     let height = 130 + (25 * burger.length - 1);
     new Jimp(326, height, function (err, canvas) {
         if (err) {
@@ -94,13 +92,18 @@ const create_burger = function (burger, filename, res) {
         });
         canvas
             .flip(false, true)
-            .write(filename, function () {
-                res.writeHead(200, {"Content-Type": "image/jpeg"});
-                fs
-                    .createReadStream(filename)
-                    .pipe(res);
+            .write(path, function () {
+                deliver_burger(path, res);
             });
     });
 };
+
+const deliver_burger = function (path, res) {
+    res.writeHead(200, {"Content-Type": "image/png"});
+    fs
+        .createReadStream(path)
+        .pipe(res);
+};
+
 
 open_assets();
