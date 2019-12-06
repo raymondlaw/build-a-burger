@@ -92,9 +92,7 @@ const create_burger = function (burger, path, res) {
         });
         canvas
             .flip(false, true)
-            .write(path, function () {
-                deliver_burger(path, res);
-            });
+            .write(path, () => deliver_burger(path, res));
     });
 };
 
